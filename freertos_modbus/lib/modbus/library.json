@@ -1,0 +1,20 @@
+{
+    "name": "FreeModbus",
+    "version": "master",
+    "repository":{
+        "type":"git",
+        "url":"https://github.com/cwalter-at/freemodbus"
+    },
+    "build": {
+        "flags": [
+            "-Iascii",
+            "-Ifunctions",
+            "-Iinclude",
+            "-Irtu",
+            "-Itcp"
+        ],
+        "srcFilter": [
+            "+<*>"
+        ]
+    }
+}
