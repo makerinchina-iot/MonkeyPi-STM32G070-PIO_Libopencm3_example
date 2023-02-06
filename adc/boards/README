@@ -1,0 +1,14 @@
+boards_dir
+Type: DirPath | Multiple: No | Default: “<Project>/boards”
+
+The location of project-specific board definitions. Each project may choose a suitable directory name. The default value is boards, meaning a “boards” directory located in the root of the project.
+
+By default, PlatformIO looks for boards in this order:
+
+Project boards_dir (as defined by this setting)
+
+Global core_dir/boards
+
+Development platform core_dir/platforms/*/boards.
+
+This option can also be configured by the global environment variable PLATFORMIO_BOARDS_DIR.
