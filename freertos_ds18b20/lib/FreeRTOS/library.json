@@ -1,0 +1,17 @@
+{
+    "name": "FreeRTOS",
+    "version": "202112.00",
+    "build": {
+        "flags": [
+            "-Isource",
+            "-Isource/include",
+            "-Isource/portable/GCC/ARM_CM0",
+            "-Isource/portable/RVDS/ARM_CM0"
+        ],
+        "srcFilter": [
+            "+<source/*.c>",
+            "+<source/portable/GCC/ARM_CM0/*.c>",
+            "+<source/portable/MemMang/heap_4.c>"
+        ]
+    }
+}

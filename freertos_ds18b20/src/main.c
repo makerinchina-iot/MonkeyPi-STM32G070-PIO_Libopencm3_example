@@ -297,17 +297,17 @@ int main(void)
 
     delay_init();
 
-    // xTaskCreate(led_task,"led task", 256, NULL,2,NULL);
+    xTaskCreate(led_task,"led task", 256, NULL,2,NULL);
 
-    // xTaskCreate(ds_task1,"ds task1", 256, NULL,2,NULL);
-    // xTaskCreate(ds_task2,"ds task2", 256, NULL,2,NULL);
+    xTaskCreate(ds_task1,"ds task1", 256, NULL,2,NULL);
+    xTaskCreate(ds_task2,"ds task2", 256, NULL,2,NULL);
 
-    // xTaskCreate(ds_task3,"ds task3", 256, NULL,2,NULL);
-    // xTaskCreate(ds_task4,"ds task4", 256, NULL,2,NULL);
+    xTaskCreate(ds_task3,"ds task3", 256, NULL,2,NULL);
+    xTaskCreate(ds_task4,"ds task4", 256, NULL,2,NULL);
 
-    // vTaskStartScheduler();
+    vTaskStartScheduler();
 
-    ds_test();
+    // ds_test();
 	
 	while(1){}
 
