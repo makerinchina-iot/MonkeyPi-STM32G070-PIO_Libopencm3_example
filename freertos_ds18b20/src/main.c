@@ -14,11 +14,24 @@
 #include <libopencm3/cm3/systick.h>
 
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "task.h"
 
-#include "ds18b20.h"
+// #include "ds18b20.h"
+
+#include "ow_ds18b20.h"
 
 #include "SEGGER_RTT.h"
+
+typedef struct _temp_t{
+    uint32_t index;
+    uint16_t value;
+}temp_t;
+
+xQueueHandle x_temp_queue;
+
+#define TASK_WAIT_TIME      200
+#define QUEUE_SEND_TIMEOUT  100
 
 void log(const char* fmt, ...)
 {
@@ -42,6 +55,9 @@ static void systick_setup(void)
 	systick_counter_enable();
 }
 
+static uint32_t counter = 0;
+static uint16_t buff[11] = {0};
+
 static void led_task(void *args)
 {
 
@@ -50,242 +66,96 @@ static void led_task(void *args)
     rcc_periph_clock_enable(RCC_GPIOB);
     gpio_mode_setup(GPIOB,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO4);
 
-
-    while (1)
-    {
-        gpio_toggle(GPIOB,GPIO4);
-        vTaskDelay(pdMS_TO_TICKS(1200));
-    }
-}
-
-
-static void ds_task1(void *args)
-{
-
-    struct ds18b20 dev1_ds18b20; 
-    dev1_ds18b20.pin = GPIO0;
-    dev1_ds18b20.port = GPIOA;
-
-    rcc_periph_clock_enable(RCC_GPIOA);
     gpio_mode_setup(GPIOA,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO0);
-
-    log("ds18b20 init1.\r\n");
-    ds18b20_init(&dev1_ds18b20);
-
-
-    while (1)
-    {
-        
-
-        ds18b20_read_temp(&dev1_ds18b20);
-
-
-        char buf[32] = {0};
-
-        uint16_t v1 = dev1_ds18b20.temp.value;
-
-
-        log("temp1: %d.%d\r\n",v1/10, v1%10);
-
-        vTaskDelay(pdMS_TO_TICKS(1200));
-    }
-}
-
-
-static void ds_task2(void *args)
-{
-
-
-
-    struct ds18b20 dev2_ds18b20;
-    dev2_ds18b20.pin = GPIO1;
-    dev2_ds18b20.port = GPIOA;
-
-    rcc_periph_clock_enable(RCC_GPIOA);
     gpio_mode_setup(GPIOA,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO1);
 
-    log("ds18b20 init2.\r\n");
-
-    ds18b20_init(&dev2_ds18b20);
-
-
-    while (1)
-    {
-
-        ds18b20_read_temp(&dev2_ds18b20);
-
-
-        char buf[32] = {0};
-
-
-        uint16_t v2 = dev2_ds18b20.temp.value;
-
-
-
-        log("temp2: %d.%d\r\n",v2/10,v2%10);
-
-        vTaskDelay(pdMS_TO_TICKS(1200));
-
-    }
-}
-
-
-static void ds_task3(void *args)
-{
-
-
-
-        struct ds18b20 dev3_ds18b20;
-    dev3_ds18b20.pin = GPIO2;
-    dev3_ds18b20.port = GPIOA;
-
-    rcc_periph_clock_enable(RCC_GPIOA);
     gpio_mode_setup(GPIOA,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO2);
-
-    log("ds18b20 init3.\r\n");
-
-    ds18b20_init(&dev3_ds18b20);
-
-
-    while (1)
-    {
-
-        ds18b20_read_temp(&dev3_ds18b20);
-
-
-        char buf[32] = {0};
-
-
-        uint16_t v3 = dev3_ds18b20.temp.value;
-
-
-        log("temp3: %d.%d\r\n",v3/10, v3%10);
-
-        vTaskDelay(pdMS_TO_TICKS(1200));
-    }
-}
-
-
-static void ds_task4(void *args)
-{
-
-    struct ds18b20 dev4_ds18b20;
-    dev4_ds18b20.pin = GPIO3;
-    dev4_ds18b20.port = GPIOA;
-
-
-
-    rcc_periph_clock_enable(RCC_GPIOA);
     gpio_mode_setup(GPIOA,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO3);
 
-    log("ds18b20 init4.\r\n");
-
-    ds18b20_init(&dev4_ds18b20);
-
-    while (1)
-    {
-
-        ds18b20_read_temp(&dev4_ds18b20);
-
-        char buf[32] = {0};
-
-
-        uint16_t v4 = dev4_ds18b20.temp.value;
-
-        log("temp4: %d.%d\r\n",v4/10, v4%10);
-
-        vTaskDelay(pdMS_TO_TICKS(1200));
-
-
-
-    }
-}
-
-void ds_test()
-{
-
-    rcc_periph_clock_enable(RCC_GPIOB);
-    gpio_mode_setup(GPIOB,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO4);
-    
-    struct ds18b20 dev1_ds18b20; 
-    dev1_ds18b20.pin = GPIO0;
-    dev1_ds18b20.port = GPIOA;
-
-    rcc_periph_clock_enable(RCC_GPIOA);
-    gpio_mode_setup(GPIOA,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO0);
-
-
-
-    struct ds18b20 dev2_ds18b20;
-    dev2_ds18b20.pin = GPIO1;
-    dev2_ds18b20.port = GPIOA;
-
-    rcc_periph_clock_enable(RCC_GPIOA);
-    gpio_mode_setup(GPIOA,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO1);
-
-
-
-    struct ds18b20 dev3_ds18b20;
-    dev3_ds18b20.pin = GPIO4;
-    dev3_ds18b20.port = GPIOA;
-
-    rcc_periph_clock_enable(RCC_GPIOA);
     gpio_mode_setup(GPIOA,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO4);
-
-
-
-    struct ds18b20 dev4_ds18b20;
-    dev4_ds18b20.pin = GPIO4;
-    dev4_ds18b20.port = GPIOC;
-
-
-
-    rcc_periph_clock_enable(RCC_GPIOC);
     gpio_mode_setup(GPIOC,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO4);
 
-    log("ds18b20 init1.\r\n");
-    ds18b20_init(&dev1_ds18b20);
+    gpio_mode_setup(GPIOC,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO5);
 
-    log("ds18b20 init2.\r\n");
-    ds18b20_init(&dev2_ds18b20);
+    gpio_mode_setup(GPIOB,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO1);
+    gpio_mode_setup(GPIOB,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO2);
+    gpio_mode_setup(GPIOB,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO10);
+    gpio_mode_setup(GPIOB,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,GPIO11);
 
-    log("ds18b20 init3.\r\n");
-    ds18b20_init(&dev3_ds18b20);
+    ow_t obj_list[11];
 
-    log("ds18b20 init4.\r\n");
-    ds18b20_init(&dev4_ds18b20);
+    obj_list[0].port = GPIOA;
+    obj_list[0].pin = GPIO0;
+
+        obj_list[1].port = GPIOA;
+    obj_list[1].pin = GPIO1;
+
+        obj_list[2].port = GPIOA;
+    obj_list[2].pin = GPIO2;
+
+        obj_list[3].port = GPIOA;
+    obj_list[3].pin = GPIO3;
+
+        obj_list[4].port = GPIOA;
+    obj_list[4].pin = GPIO4;
+
+        obj_list[5].port = GPIOC;
+    obj_list[5].pin = GPIO4;
+
+            obj_list[6].port = GPIOC;
+    obj_list[6].pin = GPIO5;
+
+            obj_list[7].port = GPIOB;
+    obj_list[7].pin = GPIO1;
+
+            obj_list[8].port = GPIOB;
+    obj_list[8].pin = GPIO2;
+
+            obj_list[9].port = GPIOB;
+    obj_list[9].pin = GPIO10;
+
+            obj_list[10].port = GPIOB;
+    obj_list[10].pin = GPIO11;
+
+
+
+    ow_ds18b20_init(obj_list, 11);
+
+    // delay_us(1000000);
+
+    ow_ds18b20_conv_temp(obj_list,11);
+
+        log("---init.\r\n");
+
+    vTaskDelay(1000);
+
+    log("---init done\r\n");
+
 
     while (1)
     {
-
-        // log("get dev1:%d\r\n", dev1_ds18b20.pin);
-
-        ds18b20_read_temp(&dev1_ds18b20);
-
-        // log("get dev2:%d\r\n", dev2_ds18b20.pin);
-        ds18b20_read_temp(&dev2_ds18b20);
-        
-        ds18b20_read_temp(&dev3_ds18b20);
-        ds18b20_read_temp(&dev4_ds18b20);
-
-        uint16_t v1 = dev1_ds18b20.temp.value;
-        uint16_t v2 = dev2_ds18b20.temp.value;
-        uint16_t v3 = dev3_ds18b20.temp.value;
-        uint16_t v4 = dev4_ds18b20.temp.value;
-
-        // log("temp1: %d.%d\r\n",v1/10, v1%10);
-        // log("temp2: %d.%d\r\n",v2/10, v2%10);
-        // log("temp3: %d.%d\r\n",v3/10, v3%10);
-        // log("temp4: %d.%d\r\n",v4/10, v4%10);
-
-        log("\r\ntemp: %d.%d    %d.%d   %d.%d   %d.%d\r\n", v1/10,v1%10,v2/10,v2%10,v3/10,v3%10,v4/10,v4%10);
-
-        mdelay(100);
-
         gpio_toggle(GPIOB,GPIO4);
 
-    }
+        // ow_ds18b20_conv_temp(obj_list,11);
 
+        //should dealy > 900ms
+        // delay_us(900*1000);
+        // vTaskDelay(pdMS_TO_TICKS(800));
+
+        ow_ds18b20_get_temp(obj_list, 11);
+
+        ow_ds18b20_conv_temp(obj_list,11);
+
+        vTaskDelay(pdMS_TO_TICKS(800));
+
+        log("\r\n temp:");
+        for(int i=0; i<11; i++){
+            log("%d.%d  ",obj_list[i].temp/10, obj_list[i].temp%10);
+        }
+        log("\r\n");
+
+        // vTaskDelay(pdMS_TO_TICKS(500));
+    }
 }
 
 int main(void)
@@ -297,18 +167,14 @@ int main(void)
 
     delay_init();
 
+    rcc_periph_clock_enable(RCC_GPIOA);
+    rcc_periph_clock_enable(RCC_GPIOB);
+    rcc_periph_clock_enable(RCC_GPIOC);
+
     xTaskCreate(led_task,"led task", 256, NULL,2,NULL);
-
-    xTaskCreate(ds_task1,"ds task1", 256, NULL,2,NULL);
-    xTaskCreate(ds_task2,"ds task2", 256, NULL,2,NULL);
-
-    xTaskCreate(ds_task3,"ds task3", 256, NULL,2,NULL);
-    xTaskCreate(ds_task4,"ds task4", 256, NULL,2,NULL);
 
     vTaskStartScheduler();
 
-    // ds_test();
-	
 	while(1){}
 
     return 0;
