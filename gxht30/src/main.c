@@ -105,7 +105,8 @@ void gxht30_sample(float *temp, float *humi)
     //send read cmd
     sw_i2c_transfer(dev_addr, cmd, 2, 0, 0);
 
-    delay_ms(10);
+    //some sensor need more waite time
+    delay_ms(20);
 
     //receive data
     sw_i2c_transfer(dev_addr, 0,0, rd_buff, 6);

@@ -51,7 +51,7 @@ static void sw_i2c_port_init()
     /* 禁用默认上拉，使SCL, SDA保持高阻状态, 设置为 OD 模式 */
     gpio_mode_setup(SW_I2C_SCL_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, SW_I2C_SCL_PIN);
     gpio_mode_setup(SW_I2C_SDA_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, SW_I2C_SDA_PIN);
-    gpio_set_output_options(SW_I2C_SCL_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, SW_I2C_SCL_PIN);
+    // gpio_set_output_options(SW_I2C_SCL_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, SW_I2C_SCL_PIN);
     gpio_set_output_options(SW_I2C_SDA_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, SW_I2C_SDA_PIN);
 
     /* 空闲: 拉高SCL和SDA */
